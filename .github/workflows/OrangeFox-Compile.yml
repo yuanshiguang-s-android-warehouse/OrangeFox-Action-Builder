@@ -15,7 +15,6 @@ on:
         default: '12.1'
         type: choice
         options:
-        - 14.1
         - 12.1
         - 11.0
       DEVICE_TREE:
@@ -43,6 +42,10 @@ on:
         - boot
         - recovery
         - vendorboot
+      CUSTOM_ENV_VARS:
+        description: 'Custom environment variables (format: VAR1=value1;VAR2=value2;VAR3=value3)'
+        required: false
+        default: ''
 
 jobs:
   build:
@@ -94,6 +97,19 @@ jobs:
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
         set +e
         source build/envsetup.sh
+        
+        # Export custom environment variables
+        if [ -n "${{ inputs.CUSTOM_ENV_VARS }}" ]; then
+          IFS=';' read -ra ENV_VARS <<< "${{ inputs.CUSTOM_ENV_VARS }}"
+          for env_var in "${ENV_VARS[@]}"; do
+            env_var=$(echo "$env_var" | xargs)
+            if [ -n "$env_var" ]; then
+              export "$env_var"
+              echo "Exported: $env_var"
+            fi
+          done
+        fi
+        
         export ALLOW_MISSING_DEPENDENCIES=true
         set -e
         lunch twrp_${{ inputs.DEVICE_NAME }}-eng && make clean && mka adbd ${{ inputs.BUILD_TARGET }}image
@@ -122,4 +138,3 @@ jobs:
           Build: fox_${{ inputs.MANIFEST_BRANCH }}
           Device: [Device Tree/Branch](${{ env.DEVICE_TREE_URL }}/tree/${{ inputs.DEVICE_TREE_BRANCH }})
           Commit: Most recent [commit](${{ env.DEVICE_TREE_URL }}/commit/${{ env.COMMIT_ID }}) during building.
-          
