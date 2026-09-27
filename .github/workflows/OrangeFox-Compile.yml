@@ -43,7 +43,7 @@ on:
         - recovery
         - vendorboot
       CUSTOM_ENV_VARS:
-        description: 'Custom environment variables (format: VAR1=value1;VAR2=value2;VAR3=value3)'
+        description: 'Custom environment variables'
         required: false
         default: ''
 
